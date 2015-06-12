@@ -19,6 +19,9 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
+    NSManagedObject *newObject = [NSEntityDescription insertNewObjectForEntityForName:@"SimpleEntity" inManagedObjectContext:self.managedObjectContext];
+    [newObject setValue: @"Bob" forKey: @"name"];
+    [self.managedObjectContext save: nil];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
@@ -74,9 +77,11 @@
     
     if (!shouldFail && !error) {
         NSPersistentStoreCoordinator *coordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
-        NSURL *url = [applicationDocumentsDirectory URLByAppendingPathComponent:@"OSXCoreDataObjC.storedata"];
-        if (![coordinator addPersistentStoreWithType:NSXMLStoreType configuration:nil URL:url options:nil error:&error]) {
-            coordinator = nil;
+        for (NSUInteger i=0; i<1000; i++) {
+            NSURL *url = [applicationDocumentsDirectory URLByAppendingPathComponent:[NSString stringWithFormat:@"OSXCoreDataObjC_%lu.storedata",i]];
+            if (![coordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:url options:@{ NSSQLitePragmasOption : @{ @"journal_mode" : @"WAL"}} error:&error]) {
+                coordinator = nil;
+            }
         }
         _persistentStoreCoordinator = coordinator;
     }
